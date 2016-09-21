@@ -43,7 +43,7 @@ class Camera {
         glm::mat4 matrix;
         void update() {
             matrix = glm::lookAt(pos, pos + DirFront, DirUp);
-            double mX, mY;
+            static double mX, mY;
             glfwGetCursorPos(window, &mX, &mY);
             if (mX != lastX || mY != lastY)
                 rotate(mX, mY);
