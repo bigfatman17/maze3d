@@ -13,10 +13,10 @@
 constexpr unsigned WindowWidth = 800, WindowHeight = 600;
 
 //delta time stuff, to make sure things happen at the same rates
-GLfloat delta = 0.0f;
-GLfloat lastFrame = 0.0f;
+static GLfloat delta = 0.0f;
+static GLfloat lastFrame = 0.0f;
 
-bool keys[1024];
+static bool keys[1024];
 
 struct Cube {
     glm::vec3 position;
