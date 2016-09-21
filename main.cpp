@@ -10,18 +10,7 @@
 #include "shader.h"
 #include "maze.h"
 
-constexpr GLuint WIDTH = 800, HEIGHT = 600;
-
-//camera stuff
-glm::vec3 camPos(0.0f, 5.0f, 0.0f);
-glm::vec3 camFront(0.0f, 0.0f, -1.0f);
-glm::vec3 camUp(0.0f, 1.0f, 0.0f);
-
-//mouse stuff
-GLfloat lastX = WIDTH / 2;
-GLfloat lastY = HEIGHT / 2;
-GLfloat pitch = 0.0f;
-GLfloat yaw = -90.0f;
+constexpr unsigned WindowWidth = 800, WindowHeight = 600;
 
 //delta time stuff, to make sure things happen at the same rates
 GLfloat delta = 0.0f;
@@ -34,7 +23,63 @@ struct Cube {
     glm::vec3 size;
 };
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+class Camera {
+    private:
+        //we need the window pointer so we can calculate the mouse coordinates
+        GLFWwindow* window;
+        //mouse variables
+        float lastX = WindowWidth / 2;
+        float lastY = WindowHeight / 2;
+        float pitch = 0.0f;
+        float yaw = -90.0f;
+        //camera stuff
+        glm::vec3 DirFront = glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 DirUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    public:
+        glm::vec3 pos = glm::vec3(0.0f, 5.0f, 0.0f);
+        glm::vec3 front() const { return DirFront; }
+        glm::vec3 up() const { return DirUp; }
+
+        glm::mat4 matrix;
+        void update() {
+            matrix = glm::lookAt(pos, pos + DirFront, DirUp);
+            double mX, mY;
+            glfwGetCursorPos(window, &mX, &mY);
+            if (mX != lastX || mY != lastY)
+                rotate(mX, mY);
+        }
+
+        float sensitivity = 0.1f;
+
+        void rotate(double mouseX, double mouseY)
+        {
+            GLfloat xoffset = mouseX - lastX;
+            GLfloat yoffset = lastY - mouseY;
+            lastX = mouseX;
+            lastY = mouseY;
+
+            xoffset *= sensitivity;
+            yoffset *= sensitivity;
+
+            yaw += xoffset;
+            pitch += yoffset;
+
+            if (pitch > 89.0f)
+                pitch = 89.0f;
+            if (pitch < -89.0f)
+                pitch = -89.0f;
+
+            glm::vec3 newFront;
+            newFront.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+            newFront.y = sin(glm::radians(pitch));
+            newFront.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+            DirFront = glm::normalize(newFront);
+        }
+
+        Camera(GLFWwindow* win) { window = win; }
+};
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -45,50 +90,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         keys[key] = false;
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    GLfloat xoffset = xpos - lastX;
-    GLfloat yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    GLfloat sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 front;
-    front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-    front.y = sin(glm::radians(pitch));
-    front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-    camFront = glm::normalize(front);
-}
-
-void handle_movement()
+static void MovePlayer(Camera& camera)
 {
     GLfloat camSpeed = 5.0f * delta;
     if (keys[GLFW_KEY_W])
-        camPos += camSpeed * camFront;
+        camera.pos += camSpeed * camera.front();
     if (keys[GLFW_KEY_S])
-        camPos -= camSpeed * camFront;
+        camera.pos -= camSpeed * camera.front();
     if (keys[GLFW_KEY_A])
-        camPos -= glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+        camera.pos -= glm::normalize(glm::cross(camera.front(), camera.up())) * camSpeed;
     if (keys[GLFW_KEY_D])
-        camPos += glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+        camera.pos += glm::normalize(glm::cross(camera.front(), camera.up())) * camSpeed;
     if (keys[GLFW_KEY_SPACE])
-        camPos += camSpeed * camUp;
+        camera.pos += camSpeed * camera.up();
     if (keys[GLFW_KEY_LEFT_SHIFT])
-        camPos -= camSpeed * camUp;
+        camera.pos -= camSpeed * camera.up();
 }
 
-std::vector<Cube> convertMazeToWorld(std::vector<glm::vec3> maze)
+static std::vector<Cube> ConvertMazeToWorld(std::vector<glm::vec3> maze)
 {
     std::vector<Cube> result;
 
@@ -119,14 +138,15 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Random Generation of 3D Mazes", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "Random Generation of 3D Mazes", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glewExperimental = GL_TRUE;
     glewInit();
-    glViewport(0, 0, WIDTH, HEIGHT);
+    glViewport(0, 0, WindowWidth, WindowHeight);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetKeyCallback(window, key_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
+
+    Camera camera(window);
 
     //the actual vertices for the cubes
     GLfloat vertices[] = {
@@ -210,11 +230,11 @@ int main(void)
     std::vector<glm::vec3> initMaze = generateMaze();
     initMaze.erase(std::remove(initMaze.begin(), initMaze.end(), glm::vec3(0, 0, 1)), initMaze.end());
     initMaze.erase(std::remove(initMaze.begin(), initMaze.end(), glm::vec3(mWIDTH - 1, mHEIGHT - 1, 3)), initMaze.end());
-    std::vector<Cube> maze = convertMazeToWorld(initMaze);
+    std::vector<Cube> maze = ConvertMazeToWorld(initMaze);
     level.reserve(level.size() + maze.size());
     level.insert(level.end(), maze.begin(), maze.end());
 
-    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)WindowWidth / (GLfloat)WindowHeight, 0.1f, 100.0f);
 
     while (!glfwWindowShouldClose(window)) {
         //calculate delta time
@@ -223,13 +243,12 @@ int main(void)
         lastFrame = currentFrame;
 
         glfwPollEvents();
-        handle_movement();
+        MovePlayer(camera);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //update the camera
-        glm::mat4 view = glm::lookAt(camPos, camPos + camFront, camUp);
+        camera.update();
 
         cube.use();
         glBindVertexArray(vao);
@@ -238,7 +257,7 @@ int main(void)
         glUniform3f(glGetUniformLocation(cube.program, "light"), 1.0f, 1.0f, 1.0f);
 
         glUniformMatrix4fv(glGetUniformLocation(cube.program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(cube.program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(cube.program, "view"), 1, GL_FALSE, glm::value_ptr(camera.matrix));
 
         for (unsigned i = 0; i < level.size(); i++) {
             glm::mat4 model;
@@ -254,7 +273,7 @@ int main(void)
         lightShader.use();
 
         glUniformMatrix4fv(glGetUniformLocation(lightShader.program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(lightShader.program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.program, "view"), 1, GL_FALSE, glm::value_ptr(camera.matrix));
         glm::mat4 model;
         model = glm::translate(model, light.position);
         model = glm::scale(model, light.size);
