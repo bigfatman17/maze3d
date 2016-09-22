@@ -29,21 +29,23 @@ static std::vector<glm::vec2> getUnvisitedNeighbors(glm::vec2 pos, bool cells[][
 
 static void removeWall(glm::vec2 currentCell, glm::vec2 newCell, std::vector<glm::vec3>& walls)
 {
+    auto remove = [&](unsigned wall, unsigned second)
+    {
+        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(currentCell.x, currentCell.y, wall)), walls.end());
+        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(newCell.x, newCell.y, second)), walls.end());
+    };
+
     if (newCell.x < currentCell.x) {
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(currentCell.x, currentCell.y, 0)), walls.end());
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(newCell.x, newCell.y, 2)), walls.end());
+        remove(0, 2);
     }
     if (newCell.y < currentCell.y) {
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(currentCell.x, currentCell.y, 1)), walls.end());
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(newCell.x, newCell.y, 3)), walls.end());
+        remove(1, 3);
     }
     if (newCell.x > currentCell.x) {
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(currentCell.x, currentCell.y, 2)), walls.end());
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(newCell.x, newCell.y, 0)), walls.end());
+        remove(2, 0);
     }
     if (newCell.y > currentCell.y) {
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(currentCell.x, currentCell.y, 3)), walls.end());
-        walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(newCell.x, newCell.y, 1)), walls.end());
+        remove(3, 1);
     }
 }
 
