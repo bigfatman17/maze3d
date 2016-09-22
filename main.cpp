@@ -16,11 +16,20 @@ constexpr unsigned WindowWidth = 800, WindowHeight = 600;
 static GLfloat delta = 0.0f;
 static GLfloat lastFrame = 0.0f;
 
-static bool keys[1024];
-
 struct Cube {
     glm::vec3 position;
     glm::vec3 size;
+};
+
+class Keyboard {
+    private:
+        GLFWwindow* window;
+    public:
+        bool getKey(int key) {
+            return glfwGetKey(window, key) == GLFW_PRESS;
+        }
+
+        Keyboard(GLFWwindow* win) { window = win; }
 };
 
 class Camera {
@@ -35,14 +44,17 @@ class Camera {
         //camera stuff
         glm::vec3 DirFront = glm::vec3(0.0f, 0.0f, -1.0f);
         glm::vec3 DirUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        glm::mat4 Matrix;
     public:
         glm::vec3 pos = glm::vec3(0.0f, 5.0f, 0.0f);
         glm::vec3 front() const { return DirFront; }
         glm::vec3 up() const { return DirUp; }
 
-        glm::mat4 matrix;
+        glm::mat4 matrix() const { return Matrix; }
+
         void update() {
-            matrix = glm::lookAt(pos, pos + DirFront, DirUp);
+            Matrix = glm::lookAt(pos, pos + DirFront, DirUp);
             static double mX, mY;
             glfwGetCursorPos(window, &mX, &mY);
             if (mX != lastX || mY != lastY)
@@ -79,31 +91,20 @@ class Camera {
         Camera(GLFWwindow* win) { window = win; }
 };
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+static void MovePlayer(Camera& camera, Keyboard keyboard)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
-
-    if (action == GLFW_PRESS)
-        keys[key] = true;
-    else if (action == GLFW_RELEASE)
-        keys[key] = false;
-}
-
-static void MovePlayer(Camera& camera)
-{
-    GLfloat camSpeed = 5.0f * delta;
-    if (keys[GLFW_KEY_W])
+    float camSpeed = 5.0f * delta;
+    if (keyboard.getKey(GLFW_KEY_W))
         camera.pos += camSpeed * camera.front();
-    if (keys[GLFW_KEY_S])
+    if (keyboard.getKey(GLFW_KEY_S))
         camera.pos -= camSpeed * camera.front();
-    if (keys[GLFW_KEY_A])
+    if (keyboard.getKey(GLFW_KEY_A))
         camera.pos -= glm::normalize(glm::cross(camera.front(), camera.up())) * camSpeed;
-    if (keys[GLFW_KEY_D])
+    if (keyboard.getKey(GLFW_KEY_D))
         camera.pos += glm::normalize(glm::cross(camera.front(), camera.up())) * camSpeed;
-    if (keys[GLFW_KEY_SPACE])
+    if (keyboard.getKey(GLFW_KEY_SPACE))
         camera.pos += camSpeed * camera.up();
-    if (keys[GLFW_KEY_LEFT_SHIFT])
+    if (keyboard.getKey(GLFW_KEY_LEFT_SHIFT))
         camera.pos -= camSpeed * camera.up();
 }
 
@@ -144,9 +145,9 @@ int main(void)
     glewInit();
     glViewport(0, 0, WindowWidth, WindowHeight);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetKeyCallback(window, key_callback);
 
     Camera camera(window);
+    Keyboard keyboard(window);
 
     //the actual vertices for the cubes
     GLfloat vertices[] = {
@@ -243,7 +244,7 @@ int main(void)
         lastFrame = currentFrame;
 
         glfwPollEvents();
-        MovePlayer(camera);
+        MovePlayer(camera, keyboard);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -257,7 +258,7 @@ int main(void)
         glUniform3f(glGetUniformLocation(cube.program, "light"), 1.0f, 1.0f, 1.0f);
 
         glUniformMatrix4fv(glGetUniformLocation(cube.program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(cube.program, "view"), 1, GL_FALSE, glm::value_ptr(camera.matrix));
+        glUniformMatrix4fv(glGetUniformLocation(cube.program, "view"), 1, GL_FALSE, glm::value_ptr(camera.matrix()));
 
         for (unsigned i = 0; i < level.size(); i++) {
             glm::mat4 model;
@@ -273,7 +274,7 @@ int main(void)
         lightShader.use();
 
         glUniformMatrix4fv(glGetUniformLocation(lightShader.program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(lightShader.program, "view"), 1, GL_FALSE, glm::value_ptr(camera.matrix));
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.program, "view"), 1, GL_FALSE, glm::value_ptr(camera.matrix()));
         glm::mat4 model;
         model = glm::translate(model, light.position);
         model = glm::scale(model, light.size);
