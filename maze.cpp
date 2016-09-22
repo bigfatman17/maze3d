@@ -1,6 +1,6 @@
 #include "maze.h"
 
-void initWalls(std::vector<glm::vec3>& array)
+static void initWalls(std::vector<glm::vec3>& array)
 {
     for (unsigned x = 0; x < mWIDTH; x++)
         for (unsigned y = 0; y < mHEIGHT; y++)
@@ -8,12 +8,12 @@ void initWalls(std::vector<glm::vec3>& array)
                 array.push_back(glm::vec3(x, y, orientation));
 }
 
-bool getCell(int x, int y, bool cells[][mHEIGHT])
+static bool getCell(int x, int y, bool cells[][mHEIGHT])
 {
     return x >= 0 && x < (int)mWIDTH && y >= 0 && y < (int)mHEIGHT ? cells[y][x] : true;
 }
 
-std::vector<glm::vec2> getUnvisitedNeighbors(glm::vec2 pos, bool cells[][mHEIGHT])
+static std::vector<glm::vec2> getUnvisitedNeighbors(glm::vec2 pos, bool cells[][mHEIGHT])
 {
     std::vector<glm::vec2> result;
     if (!getCell(pos.x - 1, pos.y, cells))
@@ -27,7 +27,7 @@ std::vector<glm::vec2> getUnvisitedNeighbors(glm::vec2 pos, bool cells[][mHEIGHT
     return result;
 }
 
-void removeWall(glm::vec2 currentCell, glm::vec2 newCell, std::vector<glm::vec3>& walls)
+static void removeWall(glm::vec2 currentCell, glm::vec2 newCell, std::vector<glm::vec3>& walls)
 {
     if (newCell.x < currentCell.x) {
         walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(currentCell.x, currentCell.y, 0)), walls.end());
