@@ -8,8 +8,8 @@
 #include <cstdlib>
 #include <iostream>
 
-const unsigned mWIDTH = 20, mHEIGHT = 20;
-const float wallSIZE = 0.25f;
-std::vector<glm::vec3> generateMaze();
+constexpr unsigned MazeWidth = 20, MazeHeight = 20;
+constexpr float WallSize = 0.25f;
+std::vector<glm::vec3> GenerateMaze();
 
 #endif /* end of include guard: MAZE_H */

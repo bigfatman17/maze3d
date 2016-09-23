@@ -115,16 +115,16 @@ static std::vector<Cube> ConvertMazeToWorld(std::vector<glm::vec3> maze)
     for (glm::vec3 i : maze) {
         switch ((unsigned)i.z) {
             case 0:
-                result.push_back({ glm::vec3(i.x - 0.5f + wallSIZE / 2, 1, i.y), glm::vec3(wallSIZE, 1, 1) });
+                result.push_back({ glm::vec3(i.x - 0.5f + WallSize / 2, 1, i.y), glm::vec3(WallSize, 1, 1) });
                 break;
             case 1:
-                result.push_back({ glm::vec3(i.x, 1, i.y - 0.5f + wallSIZE / 2), glm::vec3(1, 1, wallSIZE) });
+                result.push_back({ glm::vec3(i.x, 1, i.y - 0.5f + WallSize / 2), glm::vec3(1, 1, WallSize) });
                 break;
             case 2:
-                result.push_back({ glm::vec3(i.x + 0.5f - wallSIZE / 2, 1, i.y), glm::vec3(wallSIZE, 1, 1) });
+                result.push_back({ glm::vec3(i.x + 0.5f - WallSize / 2, 1, i.y), glm::vec3(WallSize, 1, 1) });
                 break;
             case 3:
-                result.push_back({ glm::vec3(i.x, 1, i.y + 0.5f - wallSIZE / 2), glm::vec3(1, 1, wallSIZE) });
+                result.push_back({ glm::vec3(i.x, 1, i.y + 0.5f - WallSize / 2), glm::vec3(1, 1, WallSize) });
                 break;
         }
     }
@@ -219,18 +219,18 @@ int main(void)
 
     std::vector<Cube> level;
     //level.push_back({ glm::vec3(0, 0, 0), glm::vec3(1, 1, 1) });
-    for (unsigned x = 0; x < mWIDTH; x++)
-        for (unsigned y = 0; y < mHEIGHT; y++)
+    for (unsigned x = 0; x < MazeWidth; x++)
+        for (unsigned y = 0; y < MazeHeight; y++)
             level.push_back({ glm::vec3(x, 0, y), glm::vec3(1) });
 
     //create a light for our maze
-    Cube light = { glm::vec3(mWIDTH / 2, 3, mHEIGHT / 2), glm::vec3(0.2f) };
+    Cube light = { glm::vec3(MazeWidth / 2, 3, MazeHeight / 2), glm::vec3(0.2f) };
 
     std::srand(std::time(nullptr));
 
-    std::vector<glm::vec3> initMaze = generateMaze();
+    std::vector<glm::vec3> initMaze = GenerateMaze();
     initMaze.erase(std::remove(initMaze.begin(), initMaze.end(), glm::vec3(0, 0, 1)), initMaze.end());
-    initMaze.erase(std::remove(initMaze.begin(), initMaze.end(), glm::vec3(mWIDTH - 1, mHEIGHT - 1, 3)), initMaze.end());
+    initMaze.erase(std::remove(initMaze.begin(), initMaze.end(), glm::vec3(MazeWidth - 1, MazeHeight - 1, 3)), initMaze.end());
     std::vector<Cube> maze = ConvertMazeToWorld(initMaze);
     level.reserve(level.size() + maze.size());
     level.insert(level.end(), maze.begin(), maze.end());

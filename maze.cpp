@@ -2,18 +2,18 @@
 
 static void initWalls(std::vector<glm::vec3>& array)
 {
-    for (unsigned x = 0; x < mWIDTH; x++)
-        for (unsigned y = 0; y < mHEIGHT; y++)
+    for (unsigned x = 0; x < MazeWidth; x++)
+        for (unsigned y = 0; y < MazeHeight; y++)
             for (unsigned orientation = 0; orientation < 4; orientation++)
                 array.push_back(glm::vec3(x, y, orientation));
 }
 
-static bool getCell(int x, int y, bool cells[][mHEIGHT])
+static bool getCell(int x, int y, bool cells[][MazeHeight])
 {
-    return x >= 0 && x < (int)mWIDTH && y >= 0 && y < (int)mHEIGHT ? cells[y][x] : true;
+    return x >= 0 && x < (int)MazeWidth && y >= 0 && y < (int)MazeHeight ? cells[y][x] : true;
 }
 
-static std::vector<glm::vec2> getUnvisitedNeighbors(glm::vec2 pos, bool cells[][mHEIGHT])
+static std::vector<glm::vec2> getUnvisitedNeighbors(glm::vec2 pos, bool cells[][MazeHeight])
 {
     std::vector<glm::vec2> result;
     if (!getCell(pos.x - 1, pos.y, cells))
@@ -45,18 +45,18 @@ static void removeWall(glm::vec2 currentCell, glm::vec2 newCell, std::vector<glm
         remove(3, 1);
 }
 
-std::vector<glm::vec3> generateMaze() {
+std::vector<glm::vec3> GenerateMaze() {
     std::vector<glm::vec3> walls;
     initWalls(walls);
 
     glm::vec2 currentCell(0, 0);
-    bool cells[mWIDTH][mHEIGHT] = { { 0 } };
+    bool cells[MazeWidth][MazeHeight] = { { 0 } };
     cells[(int)currentCell.y][(int)currentCell.x] = true;
     unsigned visitedCells = 1;
 
     std::stack<glm::vec2> used;
 
-    while (visitedCells < mWIDTH * mHEIGHT) {
+    while (visitedCells < MazeWidth * MazeHeight) {
         std::vector<glm::vec2> neighbors = getUnvisitedNeighbors(currentCell, cells);
         if (neighbors.size() != 0) {
             glm::vec2 newCell = neighbors[std::rand() % neighbors.size()];
