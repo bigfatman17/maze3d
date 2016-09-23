@@ -35,18 +35,14 @@ static void removeWall(glm::vec2 currentCell, glm::vec2 newCell, std::vector<glm
         walls.erase(std::remove(walls.begin(), walls.end(), glm::vec3(newCell.x, newCell.y, second)), walls.end());
     };
 
-    if (newCell.x < currentCell.x) {
+    if (newCell.x < currentCell.x)
         remove(0, 2);
-    }
-    if (newCell.y < currentCell.y) {
-        remove(1, 3);
-    }
-    if (newCell.x > currentCell.x) {
+    else if (newCell.x > currentCell.x)
         remove(2, 0);
-    }
-    if (newCell.y > currentCell.y) {
+    if (newCell.y < currentCell.y)
+        remove(1, 3);
+    else if (newCell.y > currentCell.y)
         remove(3, 1);
-    }
 }
 
 std::vector<glm::vec3> generateMaze() {
