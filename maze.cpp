@@ -45,7 +45,8 @@ static void removeWall(glm::vec2 currentCell, glm::vec2 newCell, std::vector<glm
         remove(3, 1);
 }
 
-std::vector<glm::vec3> GenerateMaze() {
+std::vector<glm::vec3> GenerateMaze()
+{
     std::vector<glm::vec3> walls;
     initWalls(walls);
 
