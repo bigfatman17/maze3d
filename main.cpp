@@ -244,6 +244,10 @@ int main(void)
         lastFrame = currentFrame;
 
         glfwPollEvents();
+
+        //keyboard events
+        //check for escape to quit game
+        if (keyboard.getKey(GLFW_KEY_ESCAPE)) glfwSetWindowShouldClose(window, 1);
         MovePlayer(camera, keyboard);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
