@@ -12,10 +12,6 @@
 
 constexpr unsigned WindowWidth = 800, WindowHeight = 600;
 
-//delta time stuff, to make sure things happen at the same rates
-static GLfloat delta = 0.0f;
-static GLfloat lastFrame = 0.0f;
-
 struct Cube {
     glm::vec3 position;
     glm::vec3 size;
@@ -91,7 +87,7 @@ class Camera {
         Camera(GLFWwindow* win) { window = win; }
 };
 
-static void MovePlayer(Camera& camera, Keyboard keyboard)
+static void MovePlayer(Camera& camera, Keyboard keyboard, float delta)
 {
     float camSpeed = 5.0f * delta;
     if (keyboard.getKey(GLFW_KEY_W))
@@ -237,6 +233,10 @@ int main(void)
 
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat)WindowWidth / (GLfloat)WindowHeight, 0.1f, 100.0f);
 
+    //delta time stuff, to make sure things happen at the same rates
+    GLfloat delta = 0.0f;
+    GLfloat lastFrame = 0.0f;
+
     while (!glfwWindowShouldClose(window)) {
         //calculate delta time
         GLfloat currentFrame = glfwGetTime();
@@ -248,7 +248,7 @@ int main(void)
         //keyboard events
         //check for escape to quit game
         if (keyboard.getKey(GLFW_KEY_ESCAPE)) glfwSetWindowShouldClose(window, GL_TRUE);
-        MovePlayer(camera, keyboard);
+        MovePlayer(camera, keyboard, delta);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
