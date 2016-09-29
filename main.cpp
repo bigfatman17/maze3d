@@ -234,12 +234,12 @@ int main(void)
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat)WindowWidth / (GLfloat)WindowHeight, 0.1f, 100.0f);
 
     //delta time stuff, to make sure things happen at the same rates
-    GLfloat delta = 0.0f;
-    GLfloat lastFrame = 0.0f;
+    float delta = 0.0f;
+    float lastFrame = 0.0f;
 
     while (!glfwWindowShouldClose(window)) {
         //calculate delta time
-        GLfloat currentFrame = glfwGetTime();
+        float currentFrame = glfwGetTime();
         delta = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
